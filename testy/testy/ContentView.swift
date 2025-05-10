@@ -37,20 +37,24 @@ struct SpacesListView: View {
     let spacesCount = 20
 
     var body: some View {
-        VStack(spacing: 16) {
-            ForEach(0..<spacesCount, id: \.self) { index in
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color.purple)
-                    .frame(width: 50, height: 50)
-                    .overlay(Text("\(index + 1)").foregroundColor(.white))
+        ScrollView {
+            VStack(spacing: 16) {
+                ForEach(0..<spacesCount, id: \.self) { index in
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Color.purple)
+                        .frame(width: 50, height: 50)
+                        .overlay(Text("\(index + 1)").foregroundColor(.white))
+                }
+                Spacer(minLength: 0)
             }
-            Spacer()
+            .padding(.top, 20)
+            .frame(maxWidth: .infinity)
         }
-        .padding(.top, 20)
         .frame(width: 70)
         .background(Color.black)
     }
 }
+
 
 // --- view constructor ---
 
