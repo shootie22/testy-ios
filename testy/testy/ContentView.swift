@@ -35,6 +35,7 @@ struct SpacesListView: View {
 
 struct RoomsListView: View {
     let roomsCount = 30
+    let onRoomTap: () -> Void
 
     var body: some View {
         ScrollView {
@@ -44,15 +45,19 @@ struct RoomsListView: View {
                         title: "Room \(index + 1)",
                         lastMessage: "Last message preview..."
                     )
+                    .onTapGesture {
+                        onRoomTap()
+                    }
                 }
                 Spacer(minLength: 0)
             }
             .padding(.top, 20)
-            .padding(.horizontal, 0) // no horizontal padding
         }
         .background(Color.black)
     }
 }
+
+
 
 
 struct RoomEntryView: View {
@@ -104,67 +109,75 @@ extension Color {
 struct ContentView: View {
     @State private var dragOffset: CGFloat = 0
     @State private var menuOpen: Bool = false
-    @State private var dragProgress: CGFloat = 0
-    
-    private let spacePanelWidth: CGFloat = 70
-    private let roomPanelWidth: CGFloat = 150
-    private var totalMenuWidth: CGFloat { spacePanelWidth + roomPanelWidth }
 
+    private let spacePanelWidth: CGFloat = 70
 
     var body: some View {
         GeometryReader { geometry in
+            let fullWidth = geometry.size.width
+            let roomPanelWidth = fullWidth - spacePanelWidth
+
             ZStack(alignment: .leading) {
+                // Sidebar: Spaces + Rooms
                 HStack(spacing: 0) {
                     SpacesListView()
                         .frame(width: spacePanelWidth)
-                    
-                    RoomsListView()
-                        .frame(width: roomPanelWidth)
+
+                    RoomsListView {
+                        withAnimation(.easeOut) {
+                            dragOffset = 0
+                            menuOpen = false
+                        }
+                    }
+                    .frame(width: roomPanelWidth)
                 }
-                .frame(width: totalMenuWidth)
+                .frame(width: fullWidth)
 
-
-
-                // main content
+                // main content view
                 Color.black.opacity(0.9)
                     .overlay(
-                        List(0 ..< 10) { item in
+                        List(0..<10) { item in
                             Text("room entries")
                                 .font(.largeTitle)
                                 .padding()
                         }
                     )
                     .offset(x: dragOffset)
-                    .gesture(
-                        DragGesture()
-                            .onChanged { value in
-                                let newOffset = value.translation.width
-                                dragProgress = newOffset
-                                if newOffset > 0 || menuOpen {
-                                    dragOffset = min(totalMenuWidth, max(0, menuOpen ? totalMenuWidth + newOffset : newOffset))
-                                }
-
-                            }
-                            .onEnded { value in
-                                withAnimation(.easeOut) {
-                                    if value.translation.width > 100 {
-                                        dragOffset = totalMenuWidth
-                                        menuOpen = true
-                                    } else if value.translation.width < -100 {
-                                        dragOffset = 0
-                                        menuOpen = false
-                                    } else {
-                                        dragOffset = menuOpen ? totalMenuWidth : 0
-                                    }
-
-                                }
-                            }
-                    )
                     .animation(.easeOut, value: dragOffset)
             }
+            // drag gesture for the main view
+            .gesture(
+                DragGesture()
+                    .onChanged { value in
+                        let newOffset = value.translation.width
+                        if menuOpen {
+                            // drag left to close
+                            dragOffset = min(fullWidth, max(0, fullWidth + newOffset))
+                        } else {
+                            // drag right to open
+                            dragOffset = min(fullWidth, max(0, newOffset))
+                        }
+                    }
+                    .onEnded { value in
+                        withAnimation(.easeOut) {
+                            if value.translation.width > 100 {
+                                dragOffset = fullWidth
+                                menuOpen = true
+                            } else if value.translation.width < -100 {
+                                dragOffset = 0
+                                menuOpen = false
+                            } else {
+                                dragOffset = menuOpen ? fullWidth : 0
+                            }
+                        }
+                    }
+            )
         }
     }
 }
+
+
+
 
 
 #Preview {
