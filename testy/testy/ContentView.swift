@@ -31,19 +31,43 @@ struct SideMenuView: View {
     }
 }
 
+// --- spaces list ---
+
+struct SpacesListView: View {
+    let spacesCount = 20
+
+    var body: some View {
+        VStack(spacing: 16) {
+            ForEach(0..<spacesCount, id: \.self) { index in
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(Color.purple)
+                    .frame(width: 50, height: 50)
+                    .overlay(Text("\(index + 1)").foregroundColor(.white))
+            }
+            Spacer()
+        }
+        .padding(.top, 20)
+        .frame(width: 70)
+        .background(Color.black)
+    }
+}
+
+// --- view constructor ---
 
 struct ContentView: View {
     @State private var dragOffset: CGFloat = 0
     @State private var menuOpen: Bool = false
+    @State private var dragProgress: CGFloat = 0
     
-    private let menuWidth: CGFloat = 150
+    private let menuWidth: CGFloat = 70
 
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .leading) {
-                // Include side menu
-                SideMenuView()
-                .opacity(menuOpen ? 1 : 0)
+                
+                // include components
+                SpacesListView()
+
                 // main content
                 Color.gray
                     .overlay(
@@ -58,6 +82,7 @@ struct ContentView: View {
                         DragGesture()
                             .onChanged { value in
                                 let newOffset = value.translation.width
+                                dragProgress = newOffset
                                 if newOffset > 0 || menuOpen {
                                     dragOffset = min(menuWidth, max(0, menuOpen ? menuWidth + newOffset : newOffset))
                                 }
